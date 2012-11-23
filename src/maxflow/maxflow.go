@@ -6,81 +6,49 @@ import (
 
 type CapType int
 
-type NodeBlock struct {
-    nodes []*Node
-    current int
-}
-
-func (blk *NodeBlock) New() *Node {
-    nd := &Node{}
-    blk.nodes = append(blk.nodes, nd)
-    return nd
-}
-
-func (blk *NodeBlock) scanFirst() *Node {
-    blk.current = 0
-    if len(blk.nodes) > 0 {
-        return blk.nodes[0]
-    } // if
-
-    return nil
-}
-
-func (blk *NodeBlock) scanNext() *Node {
-    if blk.current + 1 < len(blk.nodes) {
-        blk.current ++
-        return blk.nodes[blk.current]
-    } // if
-    
-    return nil
-}
-
-func NewNodeBlock() *NodeBlock {
-    return &NodeBlock{}
-}
-
-type Arc struct {
+type arc struct {
     head *Node /* node the arc points to */
-    next *Arc /* next arc with the same originating node */
-    sister *Arc /* reverse arc */
+    next *arc /* next arc with the same originating node */
+    sister *arc /* reverse arc */
     rCap CapType /* residual capacity */
 }
 
 type Node struct {
-    first *Arc /* first outcoming arc */
-    parent *Arc /* node's parent */
+    first *arc /* first outcoming arc */
+    parent *arc /* node's parent */
     next *Node /* pointer to the next active node (or to itself if it is the last node in the list) */
-    TS int /* timestamp showing when DIST was computed */
-    DIST int /* distance to the terminal */
+    counter int /* timestamp showing when dist was computed */
+    dist int /* distance to the terminal */
     isSink bool /* flag showing whether the node is in the source or in the sink tree */
     trCap CapType /* if tr_cap > 0 then tr_cap is residual capacity of the arc SOURCE->node
                      otherwise         -tr_cap is residual capacity of the arc node->SINK */
 }
 
-var TERMINAL *Arc = &Arc{}
-var ORPHAN *Arc = &Arc{}
+var terminalArc *arc = &arc{}
+var orphanArc *arc = &arc{}
 const INFINITE_D int = 1000000000
 
-type NodePtr struct {
+type nodePtr struct {
     ptr *Node
-    next *NodePtr
+    next *nodePtr
 }
 
 type Graph struct {
-    nodeBlock *NodeBlock
+    nodes []*Node
     
     flow CapType /* total flow */
     queueFirst [2]*Node
     queueLast [2]*Node
-    orphanFirst *NodePtr
-    orphanLast *NodePtr
-    TIME int
+    orphanFirst *nodePtr
+    orphanLast *nodePtr
+    counter int
 }
 
 func NewGraph() *Graph {
-    return &Graph{nodeBlock: NewNodeBlock()}
+    return &Graph{}
 }
 
+// For a same node, this cannot be called twice
 func (g *Graph) SetTweights(i *Node, capSource, capSink CapType) {
     if capSource < capSink {
         g.flow += capSource
@@ -92,11 +60,9 @@ func (g *Graph) SetTweights(i *Node, capSource, capSink CapType) {
 }
 
 func (g *Graph) AddEdge(from, to *Node, cap, revCap CapType) {
-	a, aRev := &Arc{}, &Arc{}
+	a, aRev := &arc{}, &arc{}
 	
-
-	a.sister = aRev
-	aRev.sister = a
+	a.sister, aRev.sister = aRev, a
 
 	a.next = from.first
 	from.first = a
@@ -104,26 +70,34 @@ func (g *Graph) AddEdge(from, to *Node, cap, revCap CapType) {
 	aRev.next = to.first
 	to.first = aRev
 
-	a.head = to
-	aRev.head = from
-
-	a.rCap = cap
-	aRev.rCap = revCap
+	a.head, aRev.head = to, from
+	a.rCap, aRev.rCap = cap, revCap
 }
 
 func (g *Graph) Flow() CapType {
     return g.flow
 }
 
+func (g *Graph) AddNode() *Node {
+    nd := &Node{}
+    g.nodes = append(g.nodes, nd)
+    return nd
+}
+
+func (g *Graph) IsSource(i *Node) bool {
+    return i.parent != nil && !i.isSink
+}
+
 func (g *Graph) Maxflow() CapType {
-    var i, j, currentNode *Node
-    var a *Arc
-    var np, npNext *NodePtr
+    var j, currentNode *Node
+    var a *arc
+    var np, npNext *nodePtr
 
 	g.maxflowInit()
 
     for {
-		if i = currentNode; currentNode != nil {
+        i := currentNode
+		if i != nil {
 		    i.next = nil
 		    if i.parent == nil {
 		        i = nil
@@ -131,7 +105,8 @@ func (g *Graph) Maxflow() CapType {
 		} // if
 		
 		if i == nil {
-		    if i = g.nextActive(); i == nil {
+		    i = g.nextActive()
+		    if i == nil {
 		        break
 		    } // if
 		} // if
@@ -145,16 +120,16 @@ func (g *Graph) Maxflow() CapType {
     				if j.parent == nil {
     				    j.isSink = false
     				    j.parent = a.sister
-    				    j.TS = i.TS
-    				    j.DIST = i.DIST + 1
+    				    j.counter = i.counter
+    				    j.dist = i.dist + 1
     				    g.setActive(j)
     				} else if j.isSink {
     				    break
-    				} else if j.TS <= i.TS && j.DIST > i.DIST {
+    				} else if j.counter <= i.counter && j.dist > i.dist {
     				    /* heuristic - trying to make the distance from j to the source shorter */
     				    j.parent = a.sister
-    				    j.TS = i.TS
-    				    j.DIST = i.DIST + 1
+    				    j.counter = i.counter
+    				    j.dist = i.dist + 1
     				} // else if
     			} // if
 			} // for a
@@ -166,23 +141,23 @@ func (g *Graph) Maxflow() CapType {
 				    if j.parent == nil {
 				        j.isSink = true
 				        j.parent = a.sister
-				        j.TS = i.TS
-				        j.DIST = i.DIST + 1
+				        j.counter = i.counter
+				        j.dist = i.dist + 1
 				        g.setActive(j)
 				    } else if !j.isSink {
 				        a = a.sister
 				        break
-				    } else if j.TS <= i.TS && j.DIST > i.DIST {
+				    } else if j.counter <= i.counter && j.dist > i.dist {
 				        /* heuristic - trying to make the distance from j to the sink shorter */
 				        j.parent = a.sister
-				        j.TS = i.TS
-				        j.DIST = i.DIST + 1
+				        j.counter = i.counter
+				        j.dist = i.dist + 1
 				    } // else if
 				} // if
             } // for a
 	    } // else
 
-		g.TIME ++
+		g.counter ++
 
 		if a != nil {
 		    /* set active flag */
@@ -223,56 +198,46 @@ func (g *Graph) Maxflow() CapType {
 	return g.flow
 }
 
-func (g *Graph) AddNode() *Node {
-    return g.nodeBlock.New()
-}
-
-func (g *Graph) IsSource(i *Node) bool {
-	return i.parent != nil && !i.isSink
-}
-
 func (g *Graph) maxflowInit() {
 	g.queueFirst[0], g.queueFirst[1] = nil, nil
 	g.queueLast[0], g.queueLast[1] = nil, nil
 
-	for i := g.nodeBlock.scanFirst(); i != nil; i = g.nodeBlock.scanNext() {
+	for _,i := range(g.nodes) {
 		i.next = nil
-		i.TS = 0
+		i.counter = 0
 		if i.trCap > 0 {
 			/* i is connected to the source */
 			i.isSink = false
-			i.parent = TERMINAL
+			i.parent = terminalArc
 			g.setActive(i)
-			i.TS = 0
-			i.DIST = 1
+			i.counter = 0
+			i.dist = 1
 	    } else if i.trCap < 0 {
 			/* i is connected to the sink */
 			i.isSink = true
-			i.parent = TERMINAL
+			i.parent = terminalArc
 			g.setActive(i)
-			i.TS = 0
-			i.DIST = 1
+			i.counter = 0
+			i.dist = 1
 	    } else {
 			i.parent = nil
 	    } // else
     } // for i
-	g.TIME = 0
+	g.counter = 0
 }
 
 /*
-	Returns the next active node.
+	nextActive returns the next active node.
 	If it is connected to the sink, it stays in the list,
 	otherwise it is removed from the list
 */
 func (g *Graph) nextActive() *Node {
-	var i *Node
-
 	for {
-		if i = g.queueFirst[0]; i == nil {
-			g.queueFirst[0], i = g.queueFirst[1], g.queueFirst[1]
-			g.queueLast[0] = g.queueLast[1]
-			g.queueFirst[1] = nil
-			g.queueLast[1] = nil
+	    i := g.queueFirst[0]
+		if i == nil {
+			i = g.queueFirst[1]
+		    g.queueFirst[0], g.queueLast[0] = g.queueFirst[1],  g.queueLast[1]
+			g.queueFirst[1], g.queueLast[1] = nil, nil
 			if i == nil {
 			    return nil
 			} // if
@@ -295,6 +260,15 @@ func (g *Graph) nextActive() *Node {
     return nil
 }
 
+/*
+	Functions for processing active list.
+	i->next points to the next node in the list (or to i, if i is the last node in the list).
+	If i->next is NULL iff i is not in the list.
+
+	There are two queues. Active nodes are added to the end of the second queue and read from the front of the first queue.
+	If the first queue is empty, it is replaced by the second queue (and the second queue becomes empty).
+*/
+
 func (g *Graph) setActive(i *Node) {
 	if i.next == nil {
 		/* it's not in the list yet */
@@ -308,11 +282,11 @@ func (g *Graph) setActive(i *Node) {
 	} // if
 }
 
-func (g *Graph) augment(middleArc *Arc) {
+func (g *Graph) augment(middleArc *arc) {
 	var i *Node
-	var a *Arc
+	var a *arc
 	var bottleNeck CapType
-	var np *NodePtr
+	var np *nodePtr
 
 
 	/* 1. Finding bottleneck capacity */
@@ -320,7 +294,7 @@ func (g *Graph) augment(middleArc *Arc) {
 	bottleNeck = middleArc.rCap
 	for i = middleArc.sister.head; true; i = a.head {
 		a = i.parent
-		if a == TERMINAL {
+		if a == terminalArc {
 		    break
 		} // if
 		if bottleNeck > a.sister.rCap {
@@ -333,7 +307,7 @@ func (g *Graph) augment(middleArc *Arc) {
 	/* 1b - the sink tree */
 	for i = middleArc.head; true; i = a.head {
 		a = i.parent
-		if a == TERMINAL {
+		if a == terminalArc {
 		    break
 		} // if
 		if bottleNeck > a.rCap {
@@ -351,15 +325,15 @@ func (g *Graph) augment(middleArc *Arc) {
 	middleArc.rCap -= bottleNeck
 	for i = middleArc.sister.head; true; i = a.head {
 		a = i.parent
-		if a == TERMINAL {
+		if a == terminalArc {
 		    break
 		} // if
 		a.rCap += bottleNeck
 		a.sister.rCap -= bottleNeck
 		if a.sister.rCap == 0 {
 			/* add i to the adoption list */
-			i.parent = ORPHAN
-			np = &NodePtr{}
+			i.parent = orphanArc
+			np = &nodePtr{}
 			np.ptr = i
 			np.next = g.orphanFirst
 			g.orphanFirst = np
@@ -368,8 +342,8 @@ func (g *Graph) augment(middleArc *Arc) {
 	i.trCap -= bottleNeck
 	if i.trCap == 0 {
 		/* add i to the adoption list */
-        i.parent = ORPHAN
-        np = &NodePtr{}
+        i.parent = orphanArc
+        np = &nodePtr{}
         np.ptr = i
         np.next = g.orphanFirst
         g.orphanFirst = np
@@ -377,15 +351,15 @@ func (g *Graph) augment(middleArc *Arc) {
 	/* 2b - the sink tree */
 	for i = middleArc.head; true; i = a.head {
 		a = i.parent
-		if a == TERMINAL {
+		if a == terminalArc {
 		    break
 		} // if
 		a.sister.rCap += bottleNeck
 		a.rCap -= bottleNeck
 		if a.rCap == 0 {
 			/* add i to the adoption list */
-			i.parent = ORPHAN
-			np = &NodePtr{}
+			i.parent = orphanArc
+			np = &nodePtr{}
 			np.ptr = i
 			np.next = g.orphanFirst
 			g.orphanFirst = np
@@ -394,8 +368,8 @@ func (g *Graph) augment(middleArc *Arc) {
 	i.trCap += bottleNeck
 	if i.trCap == 0 {
 		/* add i to the adoption list */
-        i.parent = ORPHAN
-        np = &NodePtr{}
+        i.parent = orphanArc
+        np = &nodePtr{}
         np.ptr = i
         np.next = g.orphanFirst
         g.orphanFirst = np
@@ -405,7 +379,7 @@ func (g *Graph) augment(middleArc *Arc) {
 }
 
 func (g *Graph) processSinkOrphan(i *Node) {
-	var a0Min *Arc
+	var a0Min *arc
 	var dMin int = INFINITE_D
 
 	/* trying to find a new parent */
@@ -417,18 +391,18 @@ func (g *Graph) processSinkOrphan(i *Node) {
 			//d = 0;
 			    var d int = 0
 			    for true {
-				    if j.TS == g.TIME {
-				        d += j.DIST
+				    if j.counter == g.counter {
+				        d += j.dist
 				        break
 				    } // if
 				    a = j.parent
 				    d ++
-				    if a == TERMINAL {
-					    j.TS = g.TIME
-					    j.DIST = 1
+				    if a == terminalArc {
+					    j.counter = g.counter
+					    j.dist = 1
 					    break
 					} // if
-    				if a == ORPHAN {
+    				if a == orphanArc {
     				    d = INFINITE_D
     				    break
     				} // if
@@ -441,9 +415,9 @@ func (g *Graph) processSinkOrphan(i *Node) {
 				        dMin = d
 				    } // if
                     /* set marks along the path */
-    				for j := a0.head; j.TS != g.TIME; j = j.parent.head {
-    				    j.TS = g.TIME
-    				    j.DIST = d
+    				for j := a0.head; j.counter != g.counter; j = j.parent.head {
+    				    j.counter = g.counter
+    				    j.dist = d
     				    d --
     				} // for j
 			    } // if
@@ -452,11 +426,11 @@ func (g *Graph) processSinkOrphan(i *Node) {
 	} // for a0
 
 	if i.parent = a0Min; i.parent != nil {
-		i.TS = g.TIME
-		i.DIST = dMin + 1
+		i.counter = g.counter
+		i.dist = dMin + 1
     } else {
 		/* no parent is found */
-		i.TS = 0
+		i.counter = 0
 
 		/* process neighbors */
 		for a0 := i.first; a0 != nil; a0 = a0.next {
@@ -465,10 +439,10 @@ func (g *Graph) processSinkOrphan(i *Node) {
 				if a0.rCap != 0 {
 				    g.setActive(j)
 				} // if
-				if a != TERMINAL && a != ORPHAN && a.head == i {
+				if a != terminalArc && a != orphanArc && a.head == i {
 					/* add j to the adoption list */
-					i.parent = ORPHAN
-					np := &NodePtr{}
+					i.parent = orphanArc
+					np := &nodePtr{}
 					np.ptr = j
 					if g.orphanLast != nil {
 					    g.orphanLast.next = np
@@ -484,7 +458,7 @@ func (g *Graph) processSinkOrphan(i *Node) {
 }
 
 func (g *Graph) processSourceOrphan(i *Node) {
-	var a0Min *Arc
+	var a0Min *arc
 	var dMin int = INFINITE_D
 
 	/* trying to find a new parent */
@@ -495,18 +469,18 @@ func (g *Graph) processSourceOrphan(i *Node) {
     			/* checking the origin of j */
     			var d int = 0
     			for true {
-    				if j.TS == g.TIME {
-    				    d += j.DIST
+    				if j.counter == g.counter {
+    				    d += j.dist
     				    break
     				} // if
     				a = j.parent
     				d ++
-    				if a == TERMINAL {
-    				    j.TS = g.TIME
-    				    j.DIST = 1
+    				if a == terminalArc {
+    				    j.counter = g.counter
+    				    j.dist = 1
     				    break
     				} // if
-    				if a == ORPHAN {
+    				if a == orphanArc {
     				    d = INFINITE_D
     				    break
     				} // if
@@ -519,9 +493,9 @@ func (g *Graph) processSourceOrphan(i *Node) {
     				    dMin = d
     				} // if
     				/* set marks along the path */
-    				for j := a0.head; j.TS != g.TIME; j = j.parent.head {
-    				    j.TS = g.TIME
-    				    j.DIST = d
+    				for j := a0.head; j.counter != g.counter; j = j.parent.head {
+    				    j.counter = g.counter
+    				    j.dist = d
     				    d --
     				} // for j
     			} // if
@@ -530,11 +504,11 @@ func (g *Graph) processSourceOrphan(i *Node) {
     } // for a0
 
 	if i.parent = a0Min; i.parent != nil {
-		i.TS = g.TIME
-		i.DIST = dMin + 1
+		i.counter = g.counter
+		i.dist = dMin + 1
     } else {
 		/* no parent is found */
-		i.TS = 0
+		i.counter = 0
 
 		/* process neighbors */
 		for a0 := i.first; a0 != nil; a0 = a0.next {
@@ -543,10 +517,10 @@ func (g *Graph) processSourceOrphan(i *Node) {
 				if a0.sister.rCap != 0 {
 				    g.setActive(j)
 				} // if
-				if a != TERMINAL && a != ORPHAN && a.head == i {
+				if a != terminalArc && a != orphanArc && a.head == i {
 					/* add j to the adoption list */
-					j.parent = ORPHAN
-					np := &NodePtr{}
+					j.parent = orphanArc
+					np := &nodePtr{}
 					np.ptr = j
 					if g.orphanLast != nil {
 					    g.orphanLast.next = np
