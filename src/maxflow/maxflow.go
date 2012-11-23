@@ -17,8 +17,10 @@ type Node struct {
     first *arc /* first outcoming arc */
     parent *arc /* node's parent */
     next *Node /* pointer to the next active node (or to itself if it is the last node in the list) */
-    counter int /* timestamp showing when dist was computed */
+    
     dist int /* distance to the terminal */
+    counter int /* timestamp showing when dist was computed */
+    
     isSink bool /* flag showing whether the node is in the source or in the sink tree */
     trCap CapType /* if tr_cap > 0 then tr_cap is residual capacity of the arc SOURCE->node
                      otherwise         -tr_cap is residual capacity of the arc node->SINK */
@@ -256,11 +258,7 @@ func (g *Graph) nextActive() *Node {
 	Functions for processing active list.
 	i->next points to the next node in the list (or to i, if i is the last node in the list).
 	If i->next is NULL iff i is not in the list.
-
-	There are two queues. Active nodes are added to the end of the second queue and read from the front of the first queue.
-	If the first queue is empty, it is replaced by the second queue (and the second queue becomes empty).
 */
-
 func (g *Graph) setActive(i *Node) {
 	if i.next == nil {
 		/* it's not in the list yet */
@@ -275,99 +273,99 @@ func (g *Graph) setActive(i *Node) {
 }
 
 func (g *Graph) augment(middleArc *arc) {
-	var i *Node
-	var a *arc
-	var bottleNeck CapType
-	var np *nodePtr
-
-
-	/* 1. Finding bottleneck capacity */
-	/* 1a - the source tree */
-	bottleNeck = middleArc.rCap
-	for i = middleArc.sister.head; true; i = a.head {
-		a = i.parent
-		if a == terminalArc {
-		    break
-		} // if
-		if bottleNeck > a.sister.rCap {
-		    bottleNeck = a.sister.rCap
-		} // if
-	} // for i
-	if bottleNeck > i.trCap {
-	    bottleNeck = i.trCap
-	} // if
-	/* 1b - the sink tree */
-	for i = middleArc.head; true; i = a.head {
-		a = i.parent
-		if a == terminalArc {
-		    break
-		} // if
-		if bottleNeck > a.rCap {
-		    bottleNeck = a.rCap
-		} // if
-	} // for i
-	if bottleNeck > -i.trCap {
-	    bottleNeck = - i.trCap
-	} // if
-
-
-	/* 2. Augmenting */
-	/* 2a - the source tree */
-	middleArc.sister.rCap += bottleNeck
-	middleArc.rCap -= bottleNeck
-	for i = middleArc.sister.head; true; i = a.head {
-		a = i.parent
-		if a == terminalArc {
-		    break
-		} // if
-		a.rCap += bottleNeck
-		a.sister.rCap -= bottleNeck
-		if a.sister.rCap == 0 {
-			/* add i to the adoption list */
-			i.parent = orphanArc
-			np = &nodePtr{}
-			np.ptr = i
-			np.next = g.orphanFirst
-			g.orphanFirst = np
-		} // if
-	} // for i
-	i.trCap -= bottleNeck
-	if i.trCap == 0 {
-		/* add i to the adoption list */
+    var i *Node
+    var a *arc
+    var bottleNeck CapType
+    var np *nodePtr
+    
+    
+    /* 1. Finding bottleneck capacity */
+    /* 1a - the source tree */
+    bottleNeck = middleArc.rCap
+    for i = middleArc.sister.head; true; i = a.head {
+    	a = i.parent
+    	if a == terminalArc {
+    	    break
+    	} // if
+    	if bottleNeck > a.sister.rCap {
+    	    bottleNeck = a.sister.rCap
+    	} // if
+    } // for i
+    if bottleNeck > i.trCap {
+        bottleNeck = i.trCap
+    } // if
+    /* 1b - the sink tree */
+    for i = middleArc.head; true; i = a.head {
+    	a = i.parent
+    	if a == terminalArc {
+    	    break
+    	} // if
+    	if bottleNeck > a.rCap {
+    	    bottleNeck = a.rCap
+    	} // if
+    } // for i
+    if bottleNeck > -i.trCap {
+        bottleNeck = - i.trCap
+    } // if
+    
+    
+    /* 2. Augmenting */
+    /* 2a - the source tree */
+    middleArc.sister.rCap += bottleNeck
+    middleArc.rCap -= bottleNeck
+    for i = middleArc.sister.head; true; i = a.head {
+    	a = i.parent
+    	if a == terminalArc {
+    	    break
+    	} // if
+    	a.rCap += bottleNeck
+    	a.sister.rCap -= bottleNeck
+    	if a.sister.rCap == 0 {
+    		/* add i to the adoption list */
+    		i.parent = orphanArc
+    		np = &nodePtr{}
+    		np.ptr = i
+    		np.next = g.orphanFirst
+    		g.orphanFirst = np
+    	} // if
+    } // for i
+    i.trCap -= bottleNeck
+    if i.trCap == 0 {
+    	/* add i to the adoption list */
         i.parent = orphanArc
         np = &nodePtr{}
         np.ptr = i
         np.next = g.orphanFirst
         g.orphanFirst = np
-	} // if
-	/* 2b - the sink tree */
-	for i = middleArc.head; true; i = a.head {
-		a = i.parent
-		if a == terminalArc {
-		    break
-		} // if
-		a.sister.rCap += bottleNeck
-		a.rCap -= bottleNeck
-		if a.rCap == 0 {
-			/* add i to the adoption list */
-			i.parent = orphanArc
-			np = &nodePtr{}
-			np.ptr = i
-			np.next = g.orphanFirst
-			g.orphanFirst = np
-		} // if
-	} // for i
-	i.trCap += bottleNeck
-	if i.trCap == 0 {
-		/* add i to the adoption list */
+    } // if
+    /* 2b - the sink tree */
+    for i = middleArc.head; true; i = a.head {
+    	a = i.parent
+    	if a == terminalArc {
+    	    break
+    	} // if
+    	a.sister.rCap += bottleNeck
+    	a.rCap -= bottleNeck
+    	if a.rCap == 0 {
+    		/* add i to the adoption list */
+    		i.parent = orphanArc
+    		np = &nodePtr{}
+    		np.ptr = i
+    		np.next = g.orphanFirst
+    		g.orphanFirst = np
+    	} // if
+    } // for i
+    i.trCap += bottleNeck
+    if i.trCap == 0 {
+    	/* add i to the adoption list */
         i.parent = orphanArc
         np = &nodePtr{}
         np.ptr = i
         np.next = g.orphanFirst
         g.orphanFirst = np
-	} // if
-
-	g.flow += bottleNeck
+    } // if
+    
+    g.flow += bottleNeck
 }
 
 func (g *Graph) processSinkOrphan(i *Node) {
