@@ -35,6 +35,32 @@ type nodePtr struct {
     next *nodePtr
 }
 
+/*
+Graph is a data structure representing a graph for maxflow algorithm.
+
+Usage:
+    g := NewGraph()
+    
+    nodes := make([]*Node, 2)
+    
+    for i := range(nodes) {
+        nodes[i] = g.AddNode()
+    } // for i
+    
+    g.SetTweights(nodes[0], 1, 5)
+    g.SetTweights(nodes[1], 2, 6)
+    g.AddEdge(nodes[0], nodes[1], 3, 4)
+    
+    g.Run();
+    
+    flow := g.Flow()
+    
+    if g.IsSource(nodes[0]) {
+        fmt.Println("nodes 0 is SOURCE")
+    } else {
+        fmt.Println("nodes 0 is SINK")
+    } // else
+*/	
 type Graph struct {
     nodes []*Node
     
@@ -42,13 +68,26 @@ type Graph struct {
     queueFirst, queueLast *Node
     orphanFirst, orphanLast *nodePtr
     counter int
+    finish bool
 }
 
+// NewGraph creates an initialzed Graph instance.
 func NewGraph() *Graph {
     return &Graph{}
 }
 
-// For a same node, this cannot be called twice
+// AddNode creates a node in the graph and returns a pointer to the node.
+//
+// Fields of the Node struct is not(and need not be) accessible.
+func (g *Graph) AddNode() *Node {
+    nd := &Node{}
+    g.nodes = append(g.nodes, nd)
+    return nd
+}
+
+// SetTweights sets the capacities of a node to the souce and sink node
+//
+// Do not call this method twice for a node
 func (g *Graph) SetTweights(i *Node, capSource, capSink CapType) {
     if capSource < capSink {
         g.flow += capSource
@@ -59,6 +98,9 @@ func (g *Graph) SetTweights(i *Node, capSource, capSink CapType) {
     i.trCap = capSource - capSink
 }
 
+// AddEdge adds edges between two nodes.
+//
+// cap and revCap are two directions
 func (g *Graph) AddEdge(from, to *Node, cap, revCap CapType) {
 	a, aRev := &arc{}, &arc{}
 	
@@ -74,21 +116,26 @@ func (g *Graph) AddEdge(from, to *Node, cap, revCap CapType) {
 	a.rCap, aRev.rCap = cap, revCap
 }
 
+// Flow returns the calculated maxflow.
+//
+// Call this method after calling to Run
 func (g *Graph) Flow() CapType {
     return g.flow
 }
 
-func (g *Graph) AddNode() *Node {
-    nd := &Node{}
-    g.nodes = append(g.nodes, nd)
-    return nd
-}
-
+// IsSource checks whether a node is a source in the minimum cuts.
+//
+// Call this method after calling to Run
 func (g *Graph) IsSource(i *Node) bool {
     return i.parent != nil && !i.isSink
 }
 
-func (g *Graph) Maxflow() CapType {
+// Run executes the maxflow algorithm to find the maxflow of the current graph.
+func (g *Graph) Run() {
+    if g.finish {
+        return
+    } // if
+    
     var j, currentNode *Node
     var a *arc
     var np, npNext *nodePtr
@@ -194,8 +241,8 @@ func (g *Graph) Maxflow() CapType {
 	        currentNode = nil
 	    } // else
     } // for true
-
-	return g.flow
+    
+    g.finish = true
 }
 
 func (g *Graph) maxflowInit() {

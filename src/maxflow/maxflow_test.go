@@ -34,7 +34,7 @@ func TestMaxflow1(t *testing.T) {
     g.SetTweights(nodes[1], 2, 6)
     g.AddEdge(nodes[0], nodes[1], 3, 4)
 
-	g.Maxflow();
+	g.Run();
 	assertResults(t, 3, g, nodes, []bool{false, false})
 }
 
@@ -57,6 +57,6 @@ func TestMaxflow2(t *testing.T) {
     g.AddEdge(nodes[1], nodes[3], 2, 0)
     g.AddEdge(nodes[2], nodes[3], 4, 0)
 
-    g.Maxflow();
+    g.Run();
     assertResults(t, 5, g, nodes, []bool{true, true, false, false})
 }
