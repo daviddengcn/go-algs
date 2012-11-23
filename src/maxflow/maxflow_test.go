@@ -5,9 +5,9 @@ import (
 //    "fmt"
 )
 
-func assertResults(t *testing.T, expFlow, actFlow CapType, g *Graph, nodes []*Node, isSources []bool) {
-    if actFlow != expFlow {
-        t.Errorf("Maxflow should be %d but get %d", expFlow, actFlow)
+func assertResults(t *testing.T, expFlow CapType, g *Graph, nodes []*Node, isSources []bool) {
+    if g.Flow() != expFlow {
+        t.Errorf("Maxflow should be %d but get %d", expFlow, g.Flow())
     } // if
     
     for i := range(nodes) {
@@ -34,8 +34,8 @@ func TestMaxflow1(t *testing.T) {
     g.SetTweights(nodes[1], 2, 6)
     g.AddEdge(nodes[0], nodes[1], 3, 4)
 
-	flow := g.Maxflow();
-	assertResults(t, 3, flow, g, nodes, []bool{false, false})
+	g.Maxflow();
+	assertResults(t, 3, g, nodes, []bool{false, false})
 }
 
 func TestMaxflow2(t *testing.T) {
@@ -57,6 +57,6 @@ func TestMaxflow2(t *testing.T) {
     g.AddEdge(nodes[1], nodes[3], 2, 0)
     g.AddEdge(nodes[2], nodes[3], 4, 0)
 
-    flow := g.Maxflow();
-    assertResults(t, 5, flow, g, nodes, []bool{true, true, false, false})
+    g.Maxflow();
+    assertResults(t, 5, g, nodes, []bool{true, true, false, false})
 }
