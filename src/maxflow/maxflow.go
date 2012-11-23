@@ -37,10 +37,8 @@ type Graph struct {
     nodes []*Node
     
     flow CapType /* total flow */
-    queueFirst [2]*Node
-    queueLast [2]*Node
-    orphanFirst *nodePtr
-    orphanLast *nodePtr
+    queueFirst, queueLast *Node
+    orphanFirst, orphanLast *nodePtr
     counter int
 }
 
@@ -199,8 +197,7 @@ func (g *Graph) Maxflow() CapType {
 }
 
 func (g *Graph) maxflowInit() {
-	g.queueFirst[0], g.queueFirst[1] = nil, nil
-	g.queueLast[0], g.queueLast[1] = nil, nil
+	g.queueFirst, g.queueLast = nil, nil
 
 	for _,i := range(g.nodes) {
 		i.next = nil
@@ -233,21 +230,16 @@ func (g *Graph) maxflowInit() {
 */
 func (g *Graph) nextActive() *Node {
 	for {
-	    i := g.queueFirst[0]
+	    i := g.queueFirst
 		if i == nil {
-			i = g.queueFirst[1]
-		    g.queueFirst[0], g.queueLast[0] = g.queueFirst[1],  g.queueLast[1]
-			g.queueFirst[1], g.queueLast[1] = nil, nil
-			if i == nil {
-			    return nil
-			} // if
+            return nil
 		} // if
 
 		/* remove it from the active list */
 		if i.next == i {
-		    g.queueFirst[0], g.queueLast[0] = nil, nil
+		    g.queueFirst, g.queueLast = nil, nil
 		} else {
-		    g.queueFirst[0] = i.next
+		    g.queueFirst = i.next
 		} // else
 		i.next = nil
 
@@ -272,12 +264,12 @@ func (g *Graph) nextActive() *Node {
 func (g *Graph) setActive(i *Node) {
 	if i.next == nil {
 		/* it's not in the list yet */
-		if g.queueLast[1] != nil {
-		    g.queueLast[1].next = i
+		if g.queueLast != nil {
+		    g.queueLast.next = i
 		} else {
-		    g.queueFirst[1] = i
+		    g.queueFirst = i
 		} // else
-		g.queueLast[1] = i
+		g.queueLast = i
 		i.next = i
 	} // if
 }
