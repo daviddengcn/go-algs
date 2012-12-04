@@ -10,9 +10,9 @@ Package maxflow implements the max-flow(min-cuts) algorithm which is used in com
 
 Usage:
 ```go
-    g := NewGraph()
+    g := maxflow.NewGraph()
     
-    nodes := make([]*Node, 2)
+    nodes := make([]*maxflow.Node, 2)
     
     for i := range(nodes) {
         nodes[i] = g.AddNode()
