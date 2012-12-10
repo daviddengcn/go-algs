@@ -6,7 +6,7 @@ In this repository, some algorithms are implemented in go language.
 maxflow
 -------
 
-Package maxflow implements the max-flow(min-cuts) algorithm which is used in computer vision.
+Package maxflow implements the max-flow(min-cuts or graph-cuts) algorithm which is used in computer vision.
 
 Usage:
 ```go
