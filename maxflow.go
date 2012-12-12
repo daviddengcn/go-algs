@@ -1,8 +1,17 @@
+/*
+  Maxflow package implements the max-flow(min-cuts, graph-cuts) algorithm that is used to calculate the labeling problem in computer vision or graphics area.
+  
+  The algorithm is described in
+  
+      An Experimental Comparison of Min-Cut/Max-Flow Algorithms for Energy Minimization in Computer Vision.
+      Yuri Boykov and Vladimir Kolmogorov. 
+      In IEEE Transactions on Pattern Analysis and Machine Intelligence, September 2004.
+  
+  Reference the document of Graph struct for usage information.
+*/
 package maxflow
 
-import (
-//    "fmt"
-)
+// import "fmt"
 
 type CapType int
 
