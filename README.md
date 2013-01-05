@@ -3,7 +3,7 @@ Algorithms
 
 In this repository, some algorithms are implemented in go language.
 
-GoDoc link: http://godoc.org/github.com/daviddengcn/go-algs/maxflow http://godoc.org/github.com/daviddengcn/go-algs/ed
+GoDoc link: [ed](http://godoc.org/github.com/daviddengcn/go-algs/ed) [maxflow](http://godoc.org/github.com/daviddengcn/go-algs/maxflow)
 
 maxflow
 -------
