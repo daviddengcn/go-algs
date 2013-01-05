@@ -56,6 +56,8 @@ func String(a, b string) int {
 String calculates the edit-distance and longest-common-string between two strings. Input strings must be UTF-8 encoded.
 
 The time and space complexity are all O(mn) where m and n are lengths of a and b.
+
+NOTE if detailed matching information is not necessary, call String instead because it needs much less memories.
  */
 func StringFull(a, b string) (dist int, lcs string) {
     la, lb := utf8.RuneCountInString(a), utf8.RuneCountInString(b)
@@ -194,6 +196,8 @@ EditDistanceFull returns the edit-distance and corresponding match indexes defin
 Each element in matA and matB is the index in the other list, if it is equal to or greater than zero; or -1 meaning a deleting or inserting in matA or matB respectively.
 
 The time and space complexity are all O(mn) where m and n are lengths of a and b.
+
+NOTE if detailed matching information is not necessary, call EditDistance instead because it needs much less memories.
 */
 func EditDistanceFull(in Interface) (dist int, matA, matB []int) {
     la, lb:= in.LenA(), in.LenB();
