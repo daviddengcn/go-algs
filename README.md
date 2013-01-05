@@ -3,10 +3,12 @@ Algorithms
 
 In this repository, some algorithms are implemented in go language.
 
+GoDoc link: http://go.pkgdoc.org/github.com/daviddengcn/go-algs
+
 maxflow
 -------
 
-Package maxflow implements the max-flow(min-cuts or graph-cuts) algorithm which is used in computer vision.
+This package implements the max-flow(min-cuts, graph-cuts) algorithm that is used to solve the labeling problem in computer vision or graphics area.
 
 Usage:
 ```go
