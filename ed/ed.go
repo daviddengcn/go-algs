@@ -1,3 +1,6 @@
+/*
+ed package provides some types for edit-distance calculation.
+*/
 package ed
 
 import(
@@ -14,7 +17,7 @@ func min(a, b int) int {
 }
 
 /*
-String calculates the edit-distance between two strings. Input strings must be utf8 encoded.
+String calculates the edit-distance between two strings. Input strings must be UTF-8 encoded.
 
 The time complexity is O(mn) where m and n are lengths of a and b, and space complexity is O(n).
  */

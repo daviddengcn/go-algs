@@ -3,7 +3,7 @@ Algorithms
 
 In this repository, some algorithms are implemented in go language.
 
-GoDoc link: http://go.pkgdoc.org/github.com/daviddengcn/go-algs
+GoDoc link: http://godoc.org/github.com/daviddengcn/go-algs/maxflow http://godoc.org/github.com/daviddengcn/go-algs/ed
 
 maxflow
 -------
@@ -30,3 +30,12 @@ Usage:
 
     isSource0 := g.IsSource(nodes[0])
 ```
+
+ed
+--------
+
+This package implements the edit-distance algorithm that is used to compute the similarity between two strings, or more generally defined lists.
+
+1. For computing the standard edit-distance of two strings, call ed.String function.
+
+1. For generally defined lists, implement the ed.Interface, and use ed.EditDistance function.
