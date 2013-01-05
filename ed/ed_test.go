@@ -64,6 +64,16 @@ func TestStringFull(t *testing.T) {
     } // for case
 }
 
+func ExampleString() {
+    fmt.Println(String("abcde", "bfdeg"))
+    
+    fmt.Println(StringFull("abcde", "bfdeg"))
+/* Output:
+3
+3 bde
+*/
+}
+
 type stringInterface struct {
     a, b []rune
 }
