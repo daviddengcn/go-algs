@@ -5,7 +5,7 @@ In this repository, some algorithms are implemented in go language.
 
 GoDoc link: [ed](http://godoc.org/github.com/daviddengcn/go-algs/ed) [maxflow](http://godoc.org/github.com/daviddengcn/go-algs/maxflow)
 
-maxflow
+maxflow [![GoSearch](http://go-search.org/badge?id=github.com%2Fdaviddengcn%2Fgo-algs%2Fmaxflow)](http://go-search.org/view?id=github.com%2Fdaviddengcn%2Fgo-algs%2Fmaxflow)
 -------
 
 This package implements the max-flow(min-cuts, graph-cuts) algorithm that is used to solve the labeling problem in computer vision or graphics area.
@@ -31,7 +31,7 @@ Usage:
     isSource0 := g.IsSource(nodes[0])
 ```
 
-ed
+ed [![GoSearch](http://go-search.org/badge?id=github.com%2Fdaviddengcn%2Fgo-algs%2Fed)](http://go-search.org/view?id=github.com%2Fdaviddengcn%2Fgo-algs%2Fed)
 --------
 
 This package implements the edit-distance algorithm that is used to compute the similarity between two strings, or more generally defined lists.
