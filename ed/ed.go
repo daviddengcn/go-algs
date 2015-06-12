@@ -12,13 +12,13 @@ package ed
 import (
 	"unicode/utf8"
 
-//    "fmt"
+	//    "fmt"
 )
 
 func min(a, b int) int {
 	if a < b {
 		return a
-	} // if
+	}
 
 	return b
 }
@@ -33,7 +33,7 @@ func String(a, b string) int {
 
 	for j := range f {
 		f[j] = j
-	} // for j
+	}
 
 	for _, ca := range a {
 		j := 1
@@ -45,12 +45,12 @@ func String(a, b string) int {
 				mn = min(mn, fj1+1) // change
 			} else {
 				mn = min(mn, fj1) // matched
-			} // else
+			}
 
 			fj1, f[j] = f[j], mn // save f[j] to fj1(j is about to increase), update f[j] to mn
 			j++
-		} // for cb
-	} // for ca
+		}
+	}
 
 	return f[len(f)-1]
 }
@@ -77,7 +77,7 @@ func StringFull(a, b string) (dist int, lcs string) {
 
 	for j := range f {
 		f[j] = j
-	} // for j
+	}
 
 	p := 0 // the index to ops
 
@@ -89,21 +89,21 @@ func StringFull(a, b string) (dist int, lcs string) {
 			mn, op := f[j]+1, opDEL
 			if f[j-1]+1 < mn {
 				mn, op = f[j-1]+1, opINS
-			} // if
+			}
 
 			if cb != ca {
 				if fj1+1 < mn {
 					mn, op = fj1+1, opCHANGE
-				} // if
+				}
 			} else {
 				mn, op = fj1, opMATCH
-			} // else
+			}
 
 			fj1, f[j], ops[p] = f[j], mn, op // save f[j] to fj1(j is about to increase), update f[j] to mn
 			p++
 			j++
-		} // for cb
-	} // for ca
+		}
+	}
 
 	// Calculate longest-common-string
 	lcsi := make([]int, 0, la)
@@ -116,7 +116,7 @@ func StringFull(a, b string) (dist int, lcs string) {
 			op = opDEL
 		default:
 			op = ops[(i-1)*lb+j-1]
-		} // switch
+		}
 
 		switch op {
 		case opINS:
@@ -128,9 +128,9 @@ func StringFull(a, b string) (dist int, lcs string) {
 			j--
 			if op == opMATCH {
 				lcsi = append(lcsi, i)
-			} // if
-		} // switch
-	} // for i, j
+			}
+		}
+	}
 
 	if i, l := 0, len(lcsi)-1; l > 0 {
 		for _, ca := range a {
@@ -139,11 +139,11 @@ func StringFull(a, b string) (dist int, lcs string) {
 				l--
 				if l < 0 {
 					break
-				} // if
-			} // if
+				}
+			}
 			i++
-		} // for ca
-	} // if
+		}
+	}
 
 	return f[len(f)-1], lcs
 }
@@ -152,7 +152,7 @@ func StringFull(a, b string) (dist int, lcs string) {
 func Ternary(cond bool, vT, vF int) int {
 	if cond {
 		return vT
-	} // if
+	}
 
 	return vF
 }
@@ -223,7 +223,7 @@ func EditDistance(in Interface) int {
 
 	for j := 1; j <= lb; j++ {
 		f[j] = f[j-1] + in.CostOfIns(j-1)
-	} // for j
+	}
 
 	for i := 0; i < la; i++ {
 		fj1 := f[0] // fj1 is the value of f[j - 1] in last iteration
@@ -233,8 +233,8 @@ func EditDistance(in Interface) int {
 			mn = min(mn, fj1+in.CostOfChange(i, j-1))                 // change/matched
 
 			fj1, f[j] = f[j], mn // save f[j] to fj1(j is about to increase), update f[j] to mn
-		} // for j
-	} // for i
+		}
+	}
 
 	return f[lb]
 }
@@ -250,7 +250,7 @@ func matchingFromOps(la, lb int, ops []byte) (matA, matB []int) {
 			op = opDEL
 		default:
 			op = ops[(i-1)*lb+j-1]
-		} // switch
+		}
 
 		switch op {
 		case opINS:
@@ -263,8 +263,8 @@ func matchingFromOps(la, lb int, ops []byte) (matA, matB []int) {
 			i--
 			j--
 			matA[i], matB[j] = j, i
-		} // switch
-	} // for i, j
+		}
+	}
 
 	return matA, matB
 }
@@ -285,7 +285,7 @@ func EditDistanceFull(in Interface) (dist int, matA, matB []int) {
 
 	for j := 1; j <= lb; j++ {
 		f[j] = f[j-1] + in.CostOfIns(j-1)
-	} // for j
+	}
 
 	// Matching with dynamic programming
 	p := 0
@@ -298,18 +298,18 @@ func EditDistanceFull(in Interface) (dist int, matA, matB []int) {
 			if v := f[j-1] + in.CostOfIns(j-1); v < mn {
 				// insert
 				mn, op = v, opINS
-			} // if
+			}
 
 			// change/matched
 			if v := fj1 + in.CostOfChange(i, j-1); v < mn {
 				// insert
 				mn, op = v, opCHANGE
-			} // if
+			}
 
 			fj1, f[j], ops[p] = f[j], mn, op // save f[j] to fj1(j is about to increase), update f[j] to mn
 			p++
-		} // for j
-	} // for i
+		}
+	}
 	// Reversely find the match info
 	matA, matB = matchingFromOps(la, lb, ops)
 
@@ -328,7 +328,7 @@ func EditDistanceF(lenA, lenB int, costOfChange func(iA, iB int) int, costOfDel 
 
 	for j := 1; j <= lb; j++ {
 		f[j] = f[j-1] + costOfIns(j-1)
-	} // for j
+	}
 
 	for i := 0; i < la; i++ {
 		fj1 := f[0] // fj1 is the value of f[j - 1] in last iteration
@@ -338,8 +338,8 @@ func EditDistanceF(lenA, lenB int, costOfChange func(iA, iB int) int, costOfDel 
 			mn = min(mn, fj1+costOfChange(i, j-1))              // change/matched
 
 			fj1, f[j] = f[j], mn // save f[j] to fj1(j is about to increase), update f[j] to mn
-		} // for j
-	} // for i
+		}
+	}
 
 	return f[lb]
 }
@@ -360,7 +360,7 @@ func EditDistanceFFull(lenA, lenB int, costOfChange func(iA, iB int) int, costOf
 
 	for j := 1; j <= lb; j++ {
 		f[j] = f[j-1] + costOfIns(j-1)
-	} // for j
+	}
 
 	// Matching with dynamic programming
 	p := 0
@@ -373,18 +373,18 @@ func EditDistanceFFull(lenA, lenB int, costOfChange func(iA, iB int) int, costOf
 			if v := f[j-1] + costOfIns(j-1); v < mn {
 				// insert
 				mn, op = v, opINS
-			} // if
+			}
 
 			// change/matched
 			if v := fj1 + costOfChange(i, j-1); v < mn {
 				// insert
 				mn, op = v, opCHANGE
-			} // if
+			}
 
 			fj1, f[j], ops[p] = f[j], mn, op // save f[j] to fj1(j is about to increase), update f[j] to mn
 			p++
-		} // for j
-	} // for i
+		}
+	}
 	// Reversely find the match info
 	matA, matB = matchingFromOps(la, lb, ops)
 

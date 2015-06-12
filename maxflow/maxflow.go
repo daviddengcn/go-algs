@@ -4,7 +4,7 @@
   The algorithm is described in
 
       An Experimental Comparison of Min-Cut/Max-Flow Algorithms for Energy Minimization in Computer Vision.
-      Yuri Boykov and Vladimir Kolmogorov. 
+      Yuri Boykov and Vladimir Kolmogorov.
       In IEEE Transactions on Pattern Analysis and Machine Intelligence, September 2004.
 
   Reference the document of Graph struct for usage information.

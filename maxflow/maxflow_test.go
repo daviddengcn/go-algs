@@ -2,23 +2,7 @@ package maxflow
 
 import (
 	"testing"
-
-//    "fmt"
 )
-
-func o_() string {
-	pc, _, _, _ := runtime.Caller(1)
-	name := runtime.FuncForPC(pc).Name()
-	if p := strings.LastIndexAny(name, `./\`); p >= 0 {
-		name = name[p+1:]
-	} // if
-	fmt.Println("== BEGIN", name, "===")
-	return name
-}
-
-func __(name string) {
-	fmt.Println("== END", name, "===")
-}
 
 func assertResults(t *testing.T, expFlow CapType, g *Graph, nodes []*Node, isSources []bool) {
 	if g.Flow() != expFlow {
